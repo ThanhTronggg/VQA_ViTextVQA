@@ -17,6 +17,7 @@ The project also includes testing scripts to evaluate the fine-tuned Vintern-1B-
   - [Custom VQA Model](#custom-vqa-model)
   - [Fine-tuning Vintern-1B-v2](#fine-tuning-vintern-1b-v2)
   - [ResNet50 and LSTM Model](#resnet50-and-lstm-model)
+- [Performance](#performance)
 
 ## Project Overview
 The project develops a VQA system for Vietnamese documents, addressing tasks like extracting information from receipts, signs, or event posters. It integrates multimodal deep learning, processing both visual and textual inputs. Key components include:
