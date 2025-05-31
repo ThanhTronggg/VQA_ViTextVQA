@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VQA Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #preview {
+            max-width: 100%;
+            margin-top: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: none;
+            background-color: #f9f9f9;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .error {
+            color: #ff0000;
+            background-color: #ffe6e6;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .success {
+            color: #008000;
+            background-color: #e6ffe6;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Visual Question Answering Demo</h1>
+        <div class="form-group">
+            <label for="image">Chọn ảnh:</label>
+            <input type="file" id="image" accept="image/*" onchange="previewImage(event)">
+            <img id="preview" style="display: none;">
+        </div>
+        <div class="form-group">
+            <label for="question">Câu hỏi:</label>
+            <input type="text" id="question" placeholder="Nhập câu hỏi của bạn...">
+        </div>
+        <button id="submitBtn" onclick="submitForm()">Gửi</button>
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>Đang xử lý...</p>
+        </div>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function previewImage(event) {
+            const preview = document.getElementById('preview');
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function() {
+                preview.src = reader.result;
+                preview.style.display = 'block';
+            }
+
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('submitBtn').disabled = true;
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('submitBtn').disabled = false;
+        }
+
+        function showError(message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `<div class="error">${message}</div>`;
+        }
+
+        function showSuccess(message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `<div class="success">${message}</div>`;
+        }
+
+        function submitForm() {
+            const imageFile = document.getElementById('image').files[0];
+            const question = document.getElementById('question').value;
+
+            if (!imageFile) {
+                showError('Vui lòng chọn ảnh');
+                return;
+            }
+
+            if (!question) {
+                showError('Vui lòng nhập câu hỏi');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', imageFile);
+            formData.append('question', question);
+
+            showLoading();
+
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.error) {
+                    showError(`Lỗi: ${data.error}`);
+                } else {
+                    showSuccess(`Câu trả lời: ${data.answer}`);
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                showError(`Lỗi kết nối: ${error.message}`);
+            });
+        }
+    </script>
+</body>
+</html> 
